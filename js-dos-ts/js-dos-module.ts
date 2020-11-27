@@ -26,6 +26,8 @@ export class DosModule extends DosOptions {
     private resumeListeners: Array< () => void > = [];
     private terminateListeners: Array< () => void > = [];
 
+    public mountPoints: any = {}
+
     private ciResolveFn: (ci: DosCommandInterface) => void = () => {};
 
     constructor(canvas: HTMLCanvasElement, onready: (runtime: DosRuntime) => void) {
@@ -174,9 +176,38 @@ export class DosModule extends DosOptions {
 
             // * Write default [dosbox.conf](https://js-dos.com/6.22/docs/api/generate.html?page=js-dos-conf)
             // file to user directory
+
             this.fs.createFile("/home/web_user/.dosbox/dosbox-jsdos.conf", getJsDosConfig(this));
             // * Mount emscripten FS as drive c:
-            args.unshift("-userconf", "-c", "mount c .", "-c", "c:");
+
+            const userconf = [];
+
+            if(Object.keys(this.mountPoints).length) {
+                for(const key in this.mountPoints) {
+                    userconf.push('-c');
+                    userconf.push(`mount ${key} ./${this.mountPoints[key]}`);
+                    try {
+                        this.fs.mkdir(`./${this.mountPoints[key]}`);
+                    } catch(err) {
+                    }
+                }
+                userconf.push('-c');
+                userconf.push('mount x .');
+            } else {
+                userconf.push('-c');
+                userconf.push('mount c .');
+                userconf.push('-c');
+                userconf.push('mount x .');
+            }
+
+            userconf.push('-c');
+            userconf.push('c:');
+
+            userconf.push('-c');
+            userconf.push('cls');
+
+            args.unshift("-userconf", ...userconf);
+
             // [DosCommandInterface](https://js-dos.com/6.22/docs/api/generate.html?page=js-dos-ci)
             new DosCommandInterface(this, (ci: DosCommandInterface) => {
                 this.ciResolveFn(ci);

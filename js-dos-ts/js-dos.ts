@@ -47,6 +47,10 @@ const Dos: DosFactory = (canvas: HTMLCanvasElement, options?: DosOptions) => {
             };
         }
 
+        if(options.mountPoints) {
+          module.mountPoints = options.mountPoints;
+        }
+
         Object.assign(module, options);
 
         // ### Error handling
