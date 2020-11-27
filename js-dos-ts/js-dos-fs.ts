@@ -62,6 +62,10 @@ export class DosFS {
         this.fs.chdir(path);
     }
 
+    public mkdir(path: string) {
+        this.fs.mkdir(path);
+    }
+
     // ### extract
     public extract(url: string, mountPoint: string = "/", type: "zip" = "zip"): Promise<void> {
         // simplified version of extractAll, works only for one archive. It calls extractAll inside.
@@ -130,7 +134,7 @@ export class DosFS {
             };
 
             if (!isRoot) {
-                this.fs.mount(this.fs.filesystems.IDBFS, {}, mountPoint);
+                 // this.fs.mount(this.fs.filesystems.IDBFS, {}, mountPoint);
             }
 
             return mountFn;
@@ -200,7 +204,12 @@ export class DosFS {
 
         /* i < parts.length - 1, because last part is file name */
         const path = this.createPath(parts, 0, parts.length - 1);
-        this.fs.createDataFile(path, filename, body, true, true, true);
+
+        try {
+            this.fs.createDataFile(path, filename, body, true, true, true);
+        } catch(err) {
+            this.fs.writeFile(`${path}/${filename}`, body);
+        }
     }
 
     private createPath(parts: string[], begin: number, end: number) {
@@ -261,7 +270,10 @@ export class DosFS {
     }
 
     private writeOk(path: string) {
-        this.createFile(path + "/state.fs", new Uint8Array([79, 70])); // Ok
+        try {
+            this.createFile(path + "/state.fs", new Uint8Array([79, 70])); // Ok
+        } catch(err) {
+        }
     }
 
 }
