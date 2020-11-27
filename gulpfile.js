@@ -143,6 +143,28 @@ gulp.task('test', ['copyAssetsTest'], function () {
         .pipe(gulp.dest('dist/test'));
 });
 
+gulp.task('dirty-ts', [ /* 'rewriteDefaultVersion', */
+    'copyTypeScript', 'docs', 'copyPackageJson'], function () {
+    return browserify({
+        basedir: '.',
+        debug: true,
+        entries: ['js-dos-ts/js-dos.ts'],
+        cache: {},
+        packageCache: {}
+    })
+      .plugin(tsify)
+      .transform('babelify', {
+          presets: [['@babel/preset-env', { 'useBuiltIns': 'usage', 'corejs': 2 }]],
+          extensions: ['.ts']
+      })
+      .bundle()
+      .pipe(source('js-dos.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({ loadMaps: true }))
+      .pipe(uglify())
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('dist'));
+});
 gulp.task('default', ['test', 'generateBuildInfo', 'copyWasm', 'copyAssets', /* 'rewriteDefaultVersion', */
     'copyTypeScript', 'docs', 'copyPackageJson'], function () {
         return browserify({
